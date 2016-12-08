@@ -1,9 +1,5 @@
 from itertools import izip
 
-#
-# Func utils
-#
-
 def dict_map(f, d):
     return dict( (k, f(v)) for k,v in d.iteritems() )
 

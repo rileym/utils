@@ -28,12 +28,10 @@ def directory_filename_inventory(dir_, basename_pred = None):
         filenames_meeting_pred = filter(basename_pred, filenames)
         return filenames_meeting_pred       
 
-def get_filepaths_matching_re(dir_, re_ptrn):
+def filepaths_matching_re(dir_, re_ptrn):
 
     match_pred = partial(re.match, re_ptrn)
-    match_files = filter(match_pred, os.listdir(dir_))
-    build_path = partial(normjoin, dir_)
-    return map(build_path, match_files)
+    return directory_filename_inventory(dir_, re_ptrn)
 
 def dir_is_empty(dir_):
     return not bool(os.listdir(dir_))
@@ -49,6 +47,8 @@ def remove_file(filepath):
 
 def remove_dir(dir_):
     shutil.rmtree(dir_)
+
+# object persist
 
 def load_pkl(path):
     with open(path, 'rb') as f:
