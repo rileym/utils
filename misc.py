@@ -1,11 +1,16 @@
 import re
 import unittest
 import json
+import datetime
 
 
 #
 # MOVE TO RELEVANT DOMAIN
 #
+
+def transform_date(input_date_fmt, output_date_fmt, date_raw_str):
+    date = datetime.datetime.strptime(date_raw_str, input_date_fmt)
+    return date.strftime(output_date_fmt)
 
 def format_df_for_review(df, id_columns, text_column, label_column, rank_column = None, default_label = u''):
 

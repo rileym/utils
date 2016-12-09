@@ -12,6 +12,18 @@ from itertools import imap
 # DataFrame utils
 #
 
+def drop_columns_by_name_predicate(df, drop_predicate):
+    '''Drop columns of df whose names match the drop_predicate.'''
+    
+    drop_columns = filter(drop_predicate, list(df.columns))
+    return df.drop(labels = drop_columns, axis = 1)
+
+def keep_columns_by_name_predicate(df, keep_predicate):
+    '''Keep columns of df whose names match the keep_predicate''' 
+
+    keep_columns = filter(keep_predicate, list(df.columns))
+    return df.loc[:, keep_columns]
+
 def partition_df(df, n_partitions):
     return np.array_split(df, n_partitions, axis = 0)
 
