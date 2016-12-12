@@ -15,6 +15,14 @@ def transform_date(input_date_fmt, output_date_fmt, date_raw_str):
     date = datetime.datetime.strptime(date_raw_str, input_date_fmt)
     return date.strftime(output_date_fmt)
 
+def regexep_replace_closure(re_ptrn, repl):
+
+    compiled_regexp = re.compile(re_ptrn)
+    def regexep_replace(s):
+        return compiled_regexp.sub(repl, s)
+
+    return regexep_replace
+
 def format_df_for_review(df, id_columns, text_column, label_column, rank_column = None, default_label = u''):
 
     df = df.copy()

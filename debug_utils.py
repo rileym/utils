@@ -1,9 +1,8 @@
 import pdb
 from logging import DEBUG
+import unittest
 
-#
-# Debug / logging
-#
+# Logging
 
 def log_func_call_closure(logger, level = DEBUG, start_msg_template = '{fn_name} was called...', end_msg_template = '{fn_name} finished.'):
     '''
@@ -23,6 +22,8 @@ def log_func_call_closure(logger, level = DEBUG, start_msg_template = '{fn_name}
 
     return log_func_call
 
+# pdb
+
 def debug(active = True):
     '''
     Returns a function decorator that will set a breakpoint at this function if 'active' is True.
@@ -38,3 +39,12 @@ def debug(active = True):
         return f_new
 
     return decorator
+
+# unittest
+
+def test_suite_from_test_cases(test_cases):
+    '''
+    Create and return a test suite from test_cases.
+    '''
+    load_tests_from_test_case = lambda test_case: unittest.TestLoader().loadTestsFromTestCase(test_case)
+    return unittest.TestSuite( map(load_tests_from_test_case, test_cases) )
