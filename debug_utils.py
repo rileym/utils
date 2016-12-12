@@ -6,7 +6,9 @@ from logging import DEBUG
 #
 
 def log_func_call_closure(logger, level = DEBUG, start_msg_template = '{fn_name} was called...', end_msg_template = '{fn_name} finished.'):
-
+    '''
+    Returns a function decorator that logs messages when a function is called and when its completed. 
+    '''
     def log_func_call(f):
 
         def f_out(*args, **kwargs):
@@ -22,7 +24,9 @@ def log_func_call_closure(logger, level = DEBUG, start_msg_template = '{fn_name}
     return log_func_call
 
 def debug(active = True):
-
+    '''
+    Returns a function decorator that will set a breakpoint at this function if 'active' is True.
+    '''
     def decorator(f):
 
         def f_new(*args, **kwargs):

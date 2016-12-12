@@ -9,6 +9,9 @@ import datetime
 #
 
 def transform_date(input_date_fmt, output_date_fmt, date_raw_str):
+    '''
+    Transform a date string from one date formate to another.
+    '''
     date = datetime.datetime.strptime(date_raw_str, input_date_fmt)
     return date.strftime(output_date_fmt)
 
@@ -45,11 +48,9 @@ def just_alpha_sequence(raw_str):
 # unit testing
 #
 
-def load_json(path):
-    with open(path, 'rb') as f:
-        return json.load(f)
-
 def test_suite_from_test_cases(test_cases):
-
+    '''
+    Create and return a test suite from test_cases.
+    '''
     load_tests_from_test_case = lambda test_case: unittest.TestLoader().loadTestsFromTestCase(test_case)
     return unittest.TestSuite( map(load_tests_from_test_case, test_cases) )

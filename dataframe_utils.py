@@ -1,6 +1,3 @@
-import sys
-sys.path.append('..')
-
 import numpy as np
 import os
 import pandas as pd
@@ -25,19 +22,34 @@ def keep_columns_by_name_predicate(df, keep_predicate):
     return df.loc[:, keep_columns]
 
 def partition_df(df, n_partitions):
+    '''
+    Partition a DataFrame 'df' into 'n_partitions' DataFrames that partition the original DataFrame.
+    '''
     return np.array_split(df, n_partitions, axis = 0)
 
 def index_to_columns(df, new_index_name = 'index'):
+    '''
+    Move index of DataFrame 'df' to the columns with the name given by 'new_index_name'.
+    '''
     df.index.rename(new_index_name, inplace = True)
     return df.reset_index()
 
 def vstack_dfs(dfs):
+    '''
+    Vertically stack DataFrame into a single DataFrame (new dataframe will have more rows).
+    '''
     return pd.concat(dfs, axis = 0, ignore_index = True)
 
 def hstack_dfs(dfs):
+    '''
+    Horizontally stack DataFrame into a single DataFrame (new dataframe will have more columns).
+    '''
     return pd.concat(dfs, axis = 1, ignore_index = False) 
 
 def df_select_gen(df, col_subset = None, squeeze = False):
+    '''
+    Generate rows from a DataFrame as tuples corresponding to columns in 'col_subset'.
+    '''
 
     col_subset = col_subset if col_subset is not None else list(df.columns)
     if not squeeze or len(col_subset) > 1:
@@ -57,6 +69,10 @@ def df_select_gen(df, col_subset = None, squeeze = False):
 #
 
 def standard_csv_update(src_csv_path, new_dfs, dest_csv_path = None):
+    '''
+    Add rows from DataFrames, 'new_dfs', to the DataFrame saved at 'src_csv_path', saving the updated
+    csv at 'src_csv_path' unless 'dest_csv_path' is specified.
+    '''
 
     normpath = os.path.normpath
     is_new_dest_path = ( dest_csv_path is not None ) and ( normpath(src_csv_path) != normpath(dest_csv_path) )
@@ -69,20 +85,29 @@ def standard_csv_update(src_csv_path, new_dfs, dest_csv_path = None):
         updated_df = vstack_dfs(dfs)
         standard_csv_save(updated_df, dest_csv_path)
 
-def standard_chunked_csv_load(df_path, chunksize, columns = None, **kwargs):
+# def standard_chunked_csv_load(df_path, chunksize, columns = None, **kwargs):
+#     '''
 
-    chunks_iter = standard_csv_chunked_load_iter(
-                                    df_path, 
-                                    columns = columns, 
-                                    chunksize = chunksize, 
-                                    **kwargs
-                                   )
-    return vstack_dfs(chunks_iter)
+#     '''
 
-def standard_csv_chunked_load_iter(df_path, chunksize, columns = None, **kwargs):
+#     chunks_iter = standard_csv_chunked_load_iter(
+#                                     df_path, 
+#                                     columns = columns, 
+#                                     chunksize = chunksize, 
+#                                     **kwargs
+#                                    )
+#     return vstack_dfs(chunks_iter)
+
+def standard_chunked_csv_load_iter(df_path, chunksize, columns = None, **kwargs):
+    '''
+    Load DataFrame from csv in iterable of DataFrame chunks.
+    '''
     return standard_csv_load(df_path = df_path, columns = columns, chunksize = chunksize, **kwargs)
 
 def standard_csv_load(df_path, columns = None, encoding = u'utf8', **kwargs):
+    '''
+    Load a csv with standard (for my preferences) settings.
+    '''
     return pd.read_csv(
         filepath_or_buffer = df_path,
         names = columns,
@@ -91,6 +116,9 @@ def standard_csv_load(df_path, columns = None, encoding = u'utf8', **kwargs):
     )
 
 def standard_csv_save(df, save_path, encoding = u'utf8', **kwargs):
+    '''
+    Save a DataFrame as a csv with standard (for my preferences) settings.
+    '''
     df.to_csv(save_path,
                 header = True,
                 index = False,
@@ -99,6 +127,13 @@ def standard_csv_save(df, save_path, encoding = u'utf8', **kwargs):
     )
 
 def stack_load_txt_files(paths, line_parser, columns, encoding = u'utf8'):
+    '''
+    Load text files into a dataframe. 
+    paths: paths to the text files
+    line_parser: a function that takes a line from the text file and returns a tuple (row)
+    columns: column names for the output dataframe.
+    encoding: encoding of the text file
+    '''
     
     for path in paths:
         dfs = []
