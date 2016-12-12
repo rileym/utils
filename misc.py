@@ -51,14 +51,3 @@ def just_alpha_sequence(raw_str):
     
     non_alpha_ptrn = '[^a-z]+'
     return re.sub(non_alpha_ptrn, u'', raw_str.lower())
-
-#
-# unit testing
-#
-
-def test_suite_from_test_cases(test_cases):
-    '''
-    Create and return a test suite from test_cases.
-    '''
-    load_tests_from_test_case = lambda test_case: unittest.TestLoader().loadTestsFromTestCase(test_case)
-    return unittest.TestSuite( map(load_tests_from_test_case, test_cases) )
