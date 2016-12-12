@@ -2,6 +2,8 @@ import re
 import unittest
 import json
 import datetime
+import toolz
+from operator import methodcaller
 
 
 #
@@ -15,13 +17,6 @@ def transform_date(input_date_fmt, output_date_fmt, date_raw_str):
     date = datetime.datetime.strptime(date_raw_str, input_date_fmt)
     return date.strftime(output_date_fmt)
 
-def regexep_replace_closure(re_ptrn, repl):
-
-    compiled_regexp = re.compile(re_ptrn)
-    def regexep_replace(s):
-        return compiled_regexp.sub(repl, s)
-
-    return regexep_replace
 
 def format_df_for_review(df, id_columns, text_column, label_column, rank_column = None, default_label = u''):
 
@@ -39,15 +34,25 @@ def format_df_for_review(df, id_columns, text_column, label_column, rank_column 
     return df.loc[:, out_columns]
 
 
-newline_ptn = '[\r\n]+'
-newline_re = re.compile(newline_ptn)
-space_ptn = '[\t ]+'
-space_re = re.compile(space_ptn)
-def space_normalizer(s):
-    return newline_re.sub('\n', space_re.sub(' ', s)).strip()
+def regexep_replace_closure(re_ptrn, repl):
 
+    compiled_regexp = re.compile(re_ptrn)
+    def regexep_replace(s):
+        return compiled_regexp.sub(repl, s)
 
-def just_alpha_sequence(raw_str):
-    
-    non_alpha_ptrn = '[^a-z]+'
-    return re.sub(non_alpha_ptrn, u'', raw_str.lower())
+    return regexep_replace
+#
+
+multiple_newline_ptn = '[\r\n]+'
+mutiple_space_ptrn = '[\t ]+'
+non_alpha_ptrn = '[^a-z]+'
+
+mutiple_newline_to_single_newline = regexep_replace_closure(multiple_newline_ptn, u'\n')
+multiple_space_to_single_space = regexep_replace_closure(mutiple_space_ptrn, u' ')
+str_strip = methodcaller('strip')
+str_lower = methodcaller('lower')
+
+space_normalizer = lambda s: toolz.pipe(s, multiple_space_to_single_space, mutiple_newline_to_single_newline, str_strip)
+
+remove_non_alpha = regexep_replace_closure(non_alpha_ptrn, u'')
+just_alpha_sequence = lambda s: toolz.pipe(s, str_lower, remove_non_alpha)
