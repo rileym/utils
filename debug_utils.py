@@ -43,8 +43,11 @@ def debug(active = True):
 # unittest
 
 def test_suite_from_test_cases(test_cases):
-    '''
-    Create and return a test suite from test_cases.
-    '''
+    '''Return a test suite from ``test_cases``.'''
     load_tests_from_test_case = lambda test_case: unittest.TestLoader().loadTestsFromTestCase(test_case)
     return unittest.TestSuite( map(load_tests_from_test_case, test_cases) )
+
+def run_test_suites(test_suites, verbosity = 2):
+    '''Group ``test_suites`` in a single test suite and run the suite.'''
+    master_test_suite = unittest.TestSuite(test_suites)
+    unittest.TextTestRunner(verbosity=verbosity).run(master_test_suite)
