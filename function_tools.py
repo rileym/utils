@@ -15,7 +15,7 @@ def order_tuple(iterable, **sorted_kwargs):
 	sorted_kwargs are passed to builtin sorted. See sorted doc for details.
 	'''
 	
-	return tuple(sorted(t, **sorted_kwargs))
+	return tuple(sorted(iterable, **sorted_kwargs))
     
 def for_each(fn, *iterables):
 	'''Apply function to every item of iterable and return no value. Relies on side effects.'''

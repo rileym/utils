@@ -479,7 +479,7 @@ if __name__ == '__main__':
 											LoadJsonTest,											
 										 ]
 
-	tempdir_test_suit = test_suite_from_test_cases(tempdir_test_cases)
+	tempdir_test_suite = test_suite_from_test_cases(tempdir_test_cases)
 	path_manipulation_test_suite = test_suite_from_test_cases(path_manipulation_test_cases)
 	directory_inventory_test_suite = test_suite_from_test_cases(directory_inventory_test_cases)
 	directory_status_test_suite = test_suite_from_test_cases(directory_status_test_cases)
@@ -487,7 +487,7 @@ if __name__ == '__main__':
 	fs_file_create_and_read_suite = test_suite_from_test_cases(fs_file_create_and_read_test_cases)
 
 	test_suites = [
-					tempdir_test_suit,
+					tempdir_test_suite,
 					path_manipulation_test_suite,
 					directory_inventory_test_suite,
 					directory_status_test_suite,
