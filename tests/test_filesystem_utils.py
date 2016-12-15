@@ -5,11 +5,14 @@ import tempfile
 import os
 
 import filesystem_utils as fs_utils
+from function_tools import for_each
 from debug_utils import test_suite_from_test_cases, run_test_suites
 from abc import ABCMeta, abstractmethod, abstractproperty
 
 import unittest
 
+# TODO: Make independent of type of system (see 'except WindowsError')
+# TODO: load_json test
 WINDOWS_NAME = u'nt'
 
 class TempDirTestBase(unittest.TestCase):
@@ -95,6 +98,23 @@ class TempDirTestWithSetUp(TempDirTestBase):
 
 class BaseTempDirSetUpTearDown(unittest.TestCase):
 
+	def setUp(self):
+		self.temp_dir = fs_utils.TempDir()
+		self.temp_dir.open()
+		self._build_dummy_files()
+
+	def tearDown(self):
+		self.temp_dir.close()	
+
+	@property
+	def dir_path(self):
+		return self.temp_dir.dir_
+
+	@property 
+	def _fake_path(self):
+		fake_path = fs_utils.normjoin(self.dir_path, u'fake')
+		return fake_path
+
 	@property 
 	def _dummy_path_templates(self):
 		return []
@@ -104,8 +124,10 @@ class BaseTempDirSetUpTearDown(unittest.TestCase):
 		filled_in_paths = map(self._fill_in_base_dir, self._dummy_path_templates)
 		return map(os.path.normpath, filled_in_paths)
 
+	
+
 	def _fill_in_base_dir(self, template):
-		return template.format(base_dir = self.temp_dir.dir_)
+		return template.format(base_dir = self.dir_path)
 
 	def _redundant_safe_makedirs(self, dir_path):
 		try:
@@ -119,14 +141,6 @@ class BaseTempDirSetUpTearDown(unittest.TestCase):
 			dir_path = os.path.dirname(path)
 			self._redundant_safe_makedirs(dir_path)
 			fs_utils.touch(path)
-
-	def setUp(self):
-		self.temp_dir = fs_utils.TempDir()
-		self.temp_dir.open()
-		self._build_dummy_files()
-
-	def tearDown(self):
-		self.temp_dir.close()	
 
 class NormjoinTest(BaseTempDirSetUpTearDown):
 
@@ -193,7 +207,7 @@ class ListpathsTest(BaseTempDirSetUpTearDown):
 
 	def test_listpaths_basic(self):
 		normed_paths = map(os.path.normpath, self._dummy_paths)
-		listed_paths = fs_utils.listpaths(self.temp_dir.dir_)
+		listed_paths = fs_utils.listpaths(self.dir_path)
 		for listed_path in listed_paths:
 			listed_path_is_correct = any( self._is_truncated_subpath(normed_path, listed_path) for normed_path in normed_paths )
 			self.assertTrue(listed_path_is_correct) 
@@ -205,7 +219,7 @@ class ListpathsEmptyTest(BaseTempDirSetUpTearDown):
 		return []
 
 	def test_empty_listpaths(self):
-		self.assertEqual([], fs_utils.listpaths(self.temp_dir.dir_))
+		self.assertEqual([], fs_utils.listpaths(self.dir_path))
 
 class DirectoryFilenameInventoryBaseTest(BaseTempDirSetUpTearDown):
 
@@ -215,7 +229,7 @@ class DirectoryFilenameInventoryBaseTest(BaseTempDirSetUpTearDown):
 
 	def test_directory_filename_inventory(self):
 		actual_filenames = set(self._expected_filenames)
-		found_filenames = set(fs_utils.directory_filename_inventory(self.temp_dir.dir_, basename_pred = self.basename_pred))
+		found_filenames = set(fs_utils.directory_filename_inventory(self.dir_path, basename_pred = self.basename_pred))
 		self.assertEqual(actual_filenames, found_filenames)
 
 class DirectoryFilenameInventoryBasicTest(DirectoryFilenameInventoryBaseTest):
@@ -274,12 +288,12 @@ class FilepathMacthingReTest(BaseTempDirSetUpTearDown):
 		]
 
 	def test_no_match(self):
-		returned_paths = set(fs_utils.filepaths_matching_re(self.temp_dir.dir_, u'not_a_match$'))
+		returned_paths = set(fs_utils.filepaths_matching_re(self.dir_path, u'not_a_match$'))
 		self.assertEquals(set(), returned_paths)
 
 	def test_basic_re(self):
 		expected_paths = set(self._dummy_paths[-3:])
-		returned_paths = set(fs_utils.filepaths_matching_re(self.temp_dir.dir_, u'^.+\.csv$'))
+		returned_paths = set(fs_utils.filepaths_matching_re(self.dir_path, u'^.+\.csv$'))
 		self.assertEquals(expected_paths, returned_paths)
 
 class DirExistsTestBase(BaseTempDirSetUpTearDown):
@@ -290,18 +304,13 @@ class DirExistsTestBase(BaseTempDirSetUpTearDown):
 				u'{base_dir}/a.txt'
 			   ]
 
-	@property 
-	def _fake_dir(self):
-		fake_dir = fs_utils.normjoin(self._dummy_paths[0], u'fake')
-		return fake_dir
-
 class DirExistsTest(DirExistsTestBase):
 
 	def test_exists_when_exists(self):
-		self.assertTrue(fs_utils.dir_exists(self.temp_dir.dir_))
+		self.assertTrue(fs_utils.dir_exists(self.dir_path))
 
 	def test_exists_when_not_exists(self):
-		self.assertFalse(fs_utils.dir_exists(self._fake_dir))
+		self.assertFalse(fs_utils.dir_exists(self._fake_path))
 
 	def test_exists_when_file(self):
 		self.assertFalse(fs_utils.dir_exists(self._dummy_paths[0]))
@@ -309,10 +318,10 @@ class DirExistsTest(DirExistsTestBase):
 class DirDoesNotExistTest(DirExistsTest):
 
 	def test_not_exists_when_exists(self):
-		self.assertFalse(fs_utils.dir_does_not_exist(self.temp_dir.dir_))
+		self.assertFalse(fs_utils.dir_does_not_exist(self.dir_path))
 
 	def test_not_exists_when_not_exists(self):
-		self.assertTrue(fs_utils.dir_does_not_exist(self._fake_dir))
+		self.assertTrue(fs_utils.dir_does_not_exist(self._fake_path))
 
 	def test_not_exists_when_file(self):
 		self.assertFalse(fs_utils.dir_does_not_exist(self._dummy_paths[0]))
@@ -320,29 +329,29 @@ class DirDoesNotExistTest(DirExistsTest):
 class DirIsEmptyTest(BaseTempDirSetUpTearDown):
 
 	def test_is_empty_when_empty(self):
-		self.assertTrue(fs_utils.dir_is_empty(self.temp_dir.dir_))
+		self.assertTrue(fs_utils.dir_is_empty(self.dir_path))
 
 	def test_is_empty_when_not_exists(self):
-		fake_dir = fs_utils.normjoin(self.temp_dir.dir_, u'fake')
+		fake_dir = fs_utils.normjoin(self.dir_path, u'fake')
 		with self.assertRaises(WindowsError):
 			fs_utils.dir_is_empty(fake_dir)
 
 	def _set_up_add_file(self):
 		new_filename = u'a.txt'
-		new_path = fs_utils.normjoin(self.temp_dir.dir_, new_filename)
+		new_path = fs_utils.normjoin(self.dir_path, new_filename)
 		fs_utils.touch(new_path)
 
 	def test_is_empty_when_non_empty(self):
 		self._set_up_add_file()
-		self.assertFalse(fs_utils.dir_is_empty(self.temp_dir.dir_))
+		self.assertFalse(fs_utils.dir_is_empty(self.dir_path))
 
 	def test_is_empty_when_non_empty(self):
 		self._set_up_add_file()
-		self.assertFalse(fs_utils.dir_is_empty(self.temp_dir.dir_))
+		self.assertFalse(fs_utils.dir_is_empty(self.dir_path))
 
 	def test_is_empty_when_non_directory(self):
 		self._set_up_add_file()
-		filepath = fs_utils.listpaths(self.temp_dir.dir_)[0]
+		filepath = fs_utils.listpaths(self.dir_path)[0]
 		with self.assertRaises(WindowsError):
 			fs_utils.dir_is_empty(filepath)
 
@@ -353,17 +362,84 @@ class DirIsEmptyTest(BaseTempDirSetUpTearDown):
 	# dir does not exist
 	# is a file
 
-class RemoveFileTest(BaseTempDirSetUpTearDown):
-	pass
-	# remove files
-	# remove dir
-	# remove non-existant
+class RemoveTestBase(BaseTempDirSetUpTearDown):
 
-class RemoveDir(BaseTempDirSetUpTearDown):
+	@property 
+	def _dummy_path_templates(self):
+		return [
+				u'{base_dir}/a.txt',
+				u'{base_dir}/b.csv',
+				u'{base_dir}/c/d.csv'
+			   ]
+
+class RemoveFileTest(RemoveTestBase):
+
+	def _remove_files(self):
+		for_each(fs_utils.remove_file, self._dummy_paths)
+
+	def test_remove_file_basic(self):
+		self._remove_files()
+		self.assertTrue(not any(map(os.path.exists, self._dummy_paths)))
+
+	def test_remove_file_on_dir(self):
+		with self.assertRaises(WindowsError):
+			fs_utils.remove_file(self.dir_path)
+
+	def test_remove_file_on_fake_path(self):
+		with self.assertRaises(WindowsError):
+			fs_utils.remove_file(self._fake_path)
+
+class RemoveDirTest(RemoveTestBase):
+	
+	def test_remove_dir_basic(self):
+		dir_to_remove_path = os.path.dirname(self._dummy_paths[-1])
+		fs_utils.remove_dir(dir_to_remove_path)
+		self.assertTrue(fs_utils.dir_does_not_exist(dir_to_remove_path))
+
+	def test_remove_dir_on_file(self):
+		with self.assertRaises(WindowsError):
+			file_to_remove = self._dummy_paths[0]
+			fs_utils.remove_dir(file_to_remove)
+
+	def test_remove_dir_on_fake_path(self):
+		with self.assertRaises(WindowsError):
+			fs_utils.remove_dir(self._fake_path)
+
+class TouchTest(BaseTempDirSetUpTearDown):
+
+	@property
+	def _dummy_filenames(self):
+		ext = 'txt'
+		return ['.'.join([name, ext]) for name in 'abcd']
+
+	def test_touch_basic(self):
+		for filename in self._dummy_filenames:
+			path = fs_utils.normjoin(self.temp_dir.dir_, filename)
+			fs_utils.touch(path)
+			self.assertTrue(os.path.exists(path))
+
+class LoadDumpPklTest(BaseTempDirSetUpTearDown):
+	
+	@property 
+	def _dummy_path_content_dict(self):
+		ext = 'pkl'
+		filenames = ['.'.join([name, ext]) for name in 'abcd']
+		filepaths = [fs_utils.normjoin(self.dir_path, name) for name in filenames]
+		return dict(zip(filepaths, range(len(filepaths))))
+
+	def _dump_contents(self):
+		for path, v in self._dummy_path_content_dict.iteritems():
+			fs_utils.dump_pkl(v, path)
+
+	def test_load_pkl(self):
+		self._dump_contents()
+		for path, v in self._dummy_path_content_dict.iteritems():
+			self.assertEqual(v, fs_utils.load_pkl(path))
+
+
+class LoadJsonTest(unittest.TestCase):
 	pass
-	# remove dir
-	# remove file
-	# remove non-existant
+
 
 if __name__ == '__main__':
 
@@ -392,23 +468,22 @@ if __name__ == '__main__':
 									DirDoesNotExistTest,
 								   ]
 
-   fs_remove_actions_test_cases = [
+	fs_remove_actions_test_cases = [
+									RemoveFileTest,
+									RemoveDirTest,
+								   ]
 
-
-
-   								  ]
-
-   fs_file_create_and_read_test_cases = [
-
-
-
-   										]
+	fs_file_create_and_read_test_cases = [
+											TouchTest,
+											LoadDumpPklTest,
+											LoadJsonTest,											
+										 ]
 
 	tempdir_test_suit = test_suite_from_test_cases(tempdir_test_cases)
 	path_manipulation_test_suite = test_suite_from_test_cases(path_manipulation_test_cases)
 	directory_inventory_test_suite = test_suite_from_test_cases(directory_inventory_test_cases)
 	directory_status_test_suite = test_suite_from_test_cases(directory_status_test_cases)
-	fs_remove_actions_test_suite = test_suite_from_test_cases(fs_remove_actions_test_case)
+	fs_remove_actions_test_suite = test_suite_from_test_cases(fs_remove_actions_test_cases)
 	fs_file_create_and_read_suite = test_suite_from_test_cases(fs_file_create_and_read_test_cases)
 
 	test_suites = [
@@ -416,7 +491,6 @@ if __name__ == '__main__':
 					path_manipulation_test_suite,
 					directory_inventory_test_suite,
 					directory_status_test_suite,
-					remove_test_suite,
 					fs_remove_actions_test_suite,
 					fs_file_create_and_read_suite
 				  ]
@@ -430,11 +504,10 @@ if __name__ == '__main__':
 # dir_is_empty
 # dir_exists
 # dir_does_not_exist
-
-
 # remove_file
 # remove_dir
 # touch
 # load_pkl
 # dump_pkl
+
 # load_json
