@@ -2,12 +2,11 @@ import pdb
 from logging import DEBUG
 import unittest
 
-# Logging
+# logging
 
 def log_func_call_closure(logger, level = DEBUG, start_msg_template = '{fn_name} was called...', end_msg_template = '{fn_name} finished.'):
-    '''
-    Returns a function decorator that logs messages when a function is called and when its completed. 
-    '''
+    '''Return a function decorator that logs messages when a function is called and when its completed. '''
+
     def log_func_call(f):
 
         def f_out(*args, **kwargs):
@@ -25,9 +24,8 @@ def log_func_call_closure(logger, level = DEBUG, start_msg_template = '{fn_name}
 # pdb
 
 def debug(active = True):
-    '''
-    Returns a function decorator that will set a breakpoint at this function if 'active' is True.
-    '''
+    '''Return a function decorator that will set a breakpoint at before the annotated function if ``active`` is True.'''
+
     def decorator(f):
 
         def f_new(*args, **kwargs):

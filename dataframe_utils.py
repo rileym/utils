@@ -5,51 +5,42 @@ import codecs
 
 from itertools import imap
 
+# TODO: conventionalize docstrings.
+
 #
 # DataFrame utils
 #
 
 def drop_columns_by_name_predicate(df, drop_predicate):
-    '''Drop columns of df whose names match the drop_predicate.'''
-    
+    '''Drop columns of ``df`` whose names match the drop_predicate.'''
     drop_columns = filter(drop_predicate, list(df.columns))
     return df.drop(labels = drop_columns, axis = 1)
 
 def keep_columns_by_name_predicate(df, keep_predicate):
-    '''Keep columns of df whose names match the keep_predicate''' 
+    '''Keep columns of ``df`` whose names match the keep_predicate.''' 
 
     keep_columns = filter(keep_predicate, list(df.columns))
     return df.loc[:, keep_columns]
 
 def partition_df(df, n_partitions):
-    '''
-    Partition a DataFrame 'df' into 'n_partitions' DataFrames that partition the original DataFrame.
-    '''
+    '''Split DataFrame ``df`` rowwise into ``n_partitions`` DataFrames that partition the original DataFrame.'''
     return np.array_split(df, n_partitions, axis = 0)
 
 def index_to_columns(df, new_index_name = 'index'):
-    '''
-    Move index of DataFrame 'df' to the columns with the name given by 'new_index_name'.
-    '''
+    '''Move index of DataFrame 'df' to the columns with the name given by 'new_index_name'.'''
     df.index.rename(new_index_name, inplace = True)
     return df.reset_index()
 
 def vstack_dfs(dfs):
-    '''
-    Vertically stack DataFrame into a single DataFrame (new dataframe will have more rows).
-    '''
+    '''Vertically stack DataFrame into a single DataFrame (new dataframe will have more rows).'''
     return pd.concat(dfs, axis = 0, ignore_index = True)
 
 def hstack_dfs(dfs):
-    '''
-    Horizontally stack DataFrame into a single DataFrame (new dataframe will have more columns).
-    '''
+    '''Horizontally stack DataFrame into a single DataFrame (new dataframe will have more columns).'''
     return pd.concat(dfs, axis = 1, ignore_index = False) 
 
 def df_select_gen(df, col_subset = None, squeeze = False):
-    '''
-    Generate rows from a DataFrame as tuples corresponding to columns in 'col_subset'.
-    '''
+    '''Generate rows from a DataFrame as tuples corresponding to columns in 'col_subset'.'''
 
     col_subset = col_subset if col_subset is not None else list(df.columns)
     if not squeeze or len(col_subset) > 1:
@@ -99,15 +90,11 @@ def standard_csv_update(src_csv_path, new_dfs, dest_csv_path = None):
 #     return vstack_dfs(chunks_iter)
 
 def standard_chunked_csv_load_iter(df_path, chunksize, columns = None, **kwargs):
-    '''
-    Load DataFrame from csv in iterable of DataFrame chunks.
-    '''
+    '''Load DataFrame from csv in iterable of DataFrame chunks.'''
     return standard_csv_load(df_path = df_path, columns = columns, chunksize = chunksize, **kwargs)
 
 def standard_csv_load(df_path, columns = None, encoding = u'utf8', **kwargs):
-    '''
-    Load a csv with standard (for my preferences) settings.
-    '''
+    '''Load a csv with standard (for my preferences) settings.'''
     return pd.read_csv(
         filepath_or_buffer = df_path,
         names = columns,
@@ -116,9 +103,7 @@ def standard_csv_load(df_path, columns = None, encoding = u'utf8', **kwargs):
     )
 
 def standard_csv_save(df, save_path, encoding = u'utf8', **kwargs):
-    '''
-    Save a DataFrame as a csv with standard (for my preferences) settings.
-    '''
+    '''Save a DataFrame as a csv with standard (for my preferences) settings.'''
     df.to_csv(save_path,
                 header = True,
                 index = False,
