@@ -1,11 +1,8 @@
 import sys
 sys.path.append('../')
 
-import os
-
 import function_tools as func_tools
 from debug_utils import test_suite_from_test_cases, run_test_suites
-from abc import ABCMeta, abstractmethod, abstractproperty
 
 import unittest
 

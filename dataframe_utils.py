@@ -39,10 +39,25 @@ def hstack_dfs(dfs):
     '''Horizontally stack DataFrame into a single DataFrame (new dataframe will have more columns).'''
     return pd.concat(dfs, axis = 1, ignore_index = False) 
 
+def normalize_column_for_itertuples_closure(df):
+    
+    columns = list(df.columns)
+    idx_as_str = map(lambda i: '_' + str(i), range(len(columns)))
+    columns2idx = dict(zip(columns, idx_as_str))
+
+    def normalize_column_for_itertuples(column_name):
+        is_invalid = lambda s: (' ' in s) or (s[0] == '_')
+        return column_name if not is_invalid(column_name) else columns2idx[column_name]
+
+    return normalize_column_for_itertuples
+
 def df_select_gen(df, col_subset = None, squeeze = False):
     '''Generate rows from a DataFrame as tuples corresponding to columns in 'col_subset'.'''
 
+    normalize_name = normalize_column_for_itertuples_closure(df)
     col_subset = col_subset if col_subset is not None else list(df.columns)
+    col_subset = map(normalize_name, col_subset)
+
     if not squeeze or len(col_subset) > 1:
 
         for r in df.itertuples(index = False, name = "Record"):

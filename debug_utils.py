@@ -1,6 +1,8 @@
 import pdb
 from logging import DEBUG
 import unittest
+import filesystem_utils as fs_utils
+
 
 # logging
 
@@ -21,6 +23,7 @@ def log_func_call_closure(logger, level = DEBUG, start_msg_template = '{fn_name}
 
     return log_func_call
 
+
 # pdb
 
 def debug(active = True):
@@ -38,6 +41,7 @@ def debug(active = True):
 
     return decorator
 
+
 # unittest
 
 def test_suite_from_test_cases(test_cases):
@@ -49,3 +53,17 @@ def run_test_suites(test_suites, verbosity = 2):
     '''Group ``test_suites`` in a single test suite and run the suite.'''
     master_test_suite = unittest.TestSuite(test_suites)
     unittest.TextTestRunner(verbosity=verbosity).run(master_test_suite)
+
+
+class TempDirSetUpTearDownBaseTest(unittest.TestCase):
+
+    @property 
+    def dir_path(self):
+        return self.temp_dir.dir_ 
+
+    def setUp(self):
+        self.temp_dir = fs_utils.TempDir()
+        self.temp_dir.open()
+
+    def tearDown(self):
+        self.temp_dir.close()    
