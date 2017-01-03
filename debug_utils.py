@@ -59,7 +59,10 @@ class TempDirSetUpTearDownBaseTest(unittest.TestCase):
 
     @property 
     def dir_path(self):
-        return self.temp_dir.dir_ 
+        return self.temp_dir.dir_
+
+    def next_path(self):
+        return self.temp_dir.next_path()
 
     def setUp(self):
         self.temp_dir = fs_utils.TempDir()
