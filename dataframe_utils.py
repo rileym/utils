@@ -145,3 +145,15 @@ def stack_load_txt_files(paths, line_parser, columns, encoding = u'utf8'):
         dfs.append(df)    
         
     return pd.concat(dfs, axis = 0, ignore_index = True)
+
+# TODO: add tests
+def dcast_coo(coo_mat, column_names, row_names, row_dim_name = 'row_id', col_dim_name = 'col_id', value_name = 'value'):
+    '''Convert/downcast a scipy.sparse.coo_matrix into a skinny dataframe of the non-zero elements.'''
+    row2ids =  dict( zip( xrange( len(row_names) ), row_names ) )
+    idx2word = dict( zip( xrange( len(column_names) ), column_names))
+    row_gen = ((row2ids[row_idx], idx2word[col_idx], n) for (row_idx, col_idx, n) in iter_coo(coo_mat))
+    return pd.DataFrame.from_records(data = row_gen, columns = [row_dim_name, col_dim_name, value_name])
+
+def iter_coo(coo_mat):
+    '''Iterate over the non-zero (row index, column index, value) tuples in a scipy.sparse.coo_matrix'''
+    return zip(coo_mat.row, coo_mat.col, coo_mat.data)    
