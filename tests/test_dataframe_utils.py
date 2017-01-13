@@ -4,8 +4,10 @@ sys.path.append('../')
 import pandas as pd
 
 import dataframe_utils as df_utils
-from filesystem_utils import TempDir
+import filesystem_utils as fs_utils
 from debug_utils import test_suite_from_test_cases, run_test_suites, TempDirSetUpTearDownBaseTest
+
+from abc import ABCMeta, abstractmethod, abstractproperty
 
 import unittest
 
@@ -15,8 +17,8 @@ import unittest
 # vstack_dfs
 # hstack_dfs
 # index_to_columns
-
 # df_select_gen
+
 # standard_csv_update
 # standard_chunked_csv_load
 # standard_chunked_csv_load_iter
@@ -63,7 +65,6 @@ class DropKeepColumnByNamePredicateTest(unittest.TestCase):
 		expected_df = basic_example_dataframe.loc[:,[]]
 		actual_df = df_utils.keep_columns_by_name_predicate(basic_example_dataframe, lambda name:'notinany!' in name)
 		self.assertTrue(dfs_are_equal(expected_df, actual_df))
-
 
 class PartitionDfTest(unittest.TestCase):
 	
@@ -123,40 +124,77 @@ class DfSelectGenTest(unittest.TestCase):
 		self.assertTrue( all( not isinstance(row, tuple) for row in select_gen ) )
 		self.assertEqual(list(basic_example_dataframe.loc[:, column_subset[0]].values), select_gen)		
 
+class PreloadCsvBaseTest(TempDirSetUpTearDownBaseTest):
 
-# class TempDirSetUpTearDownBaseTest(unittest.TestCase):
+	__metaclass__ = ABCMeta
 
-# 	@property 
-# 	def dir_path(self):
-# 		return self.temp_dir.dir_ 
+	@abstractproperty 
+	def _df_to_persist(self):
+		pass
 
-# 	def setUp(self):
-# 		self.temp_dir = TempDir()
-# 		self.temp_dir.open()
+	def _init_path(self):
+		self._path = self.temp_dir.next_path()
 
-# 	def tearDown(self):
-# 		self.temp_dir.close()
+	def _init_saved_csv(self):
+		df_utils.standard_csv_save(basic_example_dataframe, self._path)
 
+	def setUp(self):
+		super(PreloadCsvBaseTest, self).setUp()
+		self._init_path()
+		self._init_saved_csv()
 
-class StandardCsvUpdate(TempDirSetUpTearDownBaseTest):
-	# standard_csv_update
-	pass
+class StandardCsvUpdateTestCase(PreloadCsvBaseTest):
+	
+	@property 
+	def _df_to_persist(self):
+		return basic_example_dataframe
 
-class StandardChunkedCsvLoad(TempDirSetUpTearDownBaseTest):
+	@property 
+	def _expected_df(self):
+		return df_utils.vstack_dfs([basic_example_dataframe]*3)
+
+	def test_basic_update(self):
+		df_utils.standard_csv_update(
+									 src_csv_path = self._path, 
+									 new_dfs = [basic_example_dataframe, basic_example_dataframe],
+									 dest_csv_path = None
+									)
+
+		updated_df = df_utils.standard_csv_load(self._path)
+		self.assertTrue(dfs_are_equal(self._expected_df, updated_df))
+		
+	def test_update_to_alternate_(self):
+		pass
+
+class StandardChunkedCsvLoadTestCase(PreloadCsvBaseTest):
 	# standard_chunked_csv_load
-	pass
+	def test_basic_chunked_load(self):
+		pass
 
-class StandardChunkedCsvLoadIter(TempDirSetUpTearDownBaseTest):
+	def test_load_with_alt_arguments(self):
+		pass
+
+class StandardChunkedCsvLoadIterTestCase(PreloadCsvBaseTest):
 	# standard_chunked_csv_load_iter
-	pass
+	def test_basic_iter_load(self):
+		pass
 
-class StandardCsvLoad(TempDirSetUpTearDownBaseTest):
+class StandardCsvLoadTestCase(PreloadCsvBaseTest):
 	# standard_csv_load
-	pass
+	def test_basic_load(self):
+		pass
 
-class StandardCsvSave(TempDirSetUpTearDownBaseTest):
+	def test_load_with_alternate_arguments(self):
+		pass
+
+
+class StandardCsvSaveTestCase(TempDirSetUpTearDownBaseTest):
 	# standard_csv_save
-	pass
+	def test_basic_save(self):
+		pass
+
+	def test_save_alternate_arguments(self):
+		pass
 
 
 
@@ -178,11 +216,11 @@ if __name__ == '__main__':
  							  ]
 
  	df_io_test_cases = [
-			 			StandardCsvUpdate,
-						StandardChunkedCsvLoad,
-						StandardChunkedCsvLoadIter,
-						StandardCsvLoad,
-						StandardCsvSave,
+			 			StandardCsvUpdateTestCase,
+						StandardChunkedCsvLoadTestCase,
+						StandardChunkedCsvLoadIterTestCase,
+						StandardCsvLoadTestCase,
+						StandardCsvSaveTestCase,
 					   ]
 
 	column_name_predicate_test_suite = test_suite_from_test_cases(column_name_predicate_test_cases)
