@@ -91,19 +91,6 @@ def standard_csv_update(src_csv_path, new_dfs, dest_csv_path = None):
         updated_df = vstack_dfs(dfs)
         standard_csv_save(updated_df, dest_csv_path)
 
-# def standard_chunked_csv_load(df_path, chunksize, columns = None, **kwargs):
-#     '''
-
-#     '''
-
-#     chunks_iter = standard_csv_chunked_load_iter(
-#                                     df_path, 
-#                                     columns = columns, 
-#                                     chunksize = chunksize, 
-#                                     **kwargs
-#                                    )
-#     return vstack_dfs(chunks_iter)
-
 def standard_chunked_csv_load_iter(df_path, chunksize, columns = None, **kwargs):
     '''Load DataFrame from csv in iterable of DataFrame chunks.'''
     return standard_csv_load(df_path = df_path, columns = columns, chunksize = chunksize, **kwargs)
